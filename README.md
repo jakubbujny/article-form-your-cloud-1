@@ -1,2 +1,2 @@
-Terraform version tested: v0.11.7
+Terraform version used: v0.11.7
 
