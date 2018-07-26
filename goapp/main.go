@@ -15,7 +15,10 @@ import (
 	"strconv"
 	"encoding/base64"
 	"strings"
+	"os"
 )
+
+
 
 //source: https://davidwalsh.name/browser-camera
 const site_template string = `
@@ -73,6 +76,8 @@ document.getElementById("snap").addEventListener("click", function() {
 </html>
 `
 
+var bucket string
+
 func SpawnAwsSdkS3Service() *s3.S3 {
 	sess, err := session.NewSession(&aws.Config{
 		Region: aws.String("eu-central-1")},
@@ -84,7 +89,7 @@ func SpawnAwsSdkS3Service() *s3.S3 {
 }
 func GetRootSite(ResponseWriter http.ResponseWriter, _ *http.Request) {
 	svc := SpawnAwsSdkS3Service()
-	resp, err := svc.ListObjects(&s3.ListObjectsInput{Bucket: aws.String("jakubbujny-article-form-your-cloud-1-photos")})
+	resp, err := svc.ListObjects(&s3.ListObjectsInput{Bucket: aws.String(bucket)})
 	if err != nil {
 		panic(err)
 	}
@@ -99,7 +104,7 @@ func GetImage(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	w.WriteHeader(http.StatusOK)
 	svc := SpawnAwsSdkS3Service()
-	resp, err := svc.GetObject(&s3.GetObjectInput{Bucket: aws.String("jakubbujny-article-form-your-cloud-1-photos"), Key: aws.String(vars["image_name"])})
+	resp, err := svc.GetObject(&s3.GetObjectInput{Bucket: aws.String(bucket), Key: aws.String(vars["image_name"])})
 	if err != nil {
 		panic(err)
 	}
@@ -117,7 +122,7 @@ func SaveImage(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-	_ , err1 := svc.PutObject(&s3.PutObjectInput{Key: aws.String(strconv.FormatInt(time.Now().UnixNano(), 10)+".jpg"), Bucket: aws.String("jakubbujny-article-form-your-cloud-1-photos"), Body: bytes.NewReader(decoded)})
+	_ , err1 := svc.PutObject(&s3.PutObjectInput{Key: aws.String(strconv.FormatInt(time.Now().UnixNano(), 10)+".jpg"), Bucket: aws.String(bucket), Body: bytes.NewReader(decoded)})
 	if err1 != nil {
 		panic(err1)
 	}
@@ -125,6 +130,7 @@ func SaveImage(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+	bucket = os.Args[1]
 	router := mux.NewRouter()
 	router.HandleFunc("/", GetRootSite).Methods("GET")
 	router.HandleFunc("/image/{image_name}", GetImage).Methods("GET")

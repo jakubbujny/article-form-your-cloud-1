@@ -1,0 +1,36 @@
+{
+  "variables": {
+    "region" : "{{env `TF_VAR_region`}}",
+    "vpc": "{{env `network_vpc_id`}}",
+    "subnet": "{{ env `network_packer_subnet_id`}}",
+    "s3_buckets_prefix": "{{ env `s3_buckets_prefix`}}"
+  },
+  "description": "Fluentd logging consumer image",
+  "builders": [
+    {
+      "type": "amazon-ebs",
+      "ami_name": "ac-fluentd-consumer-{{ timestamp }}",
+      "region": "{{user `region`}}",
+      "source_ami_filter": {
+        "filters": {
+          "virtualization-type": "hvm",
+          "name": "ubuntu/images/*ubuntu-xenial-16.04-amd64-server-*",
+          "root-device-type": "ebs"
+        },
+        "owners": ["099720109477"],
+        "most_recent": true
+      },
+      "instance_type": "t2.large",
+      "ssh_username": "ubuntu",
+      "vpc_id": "{{user `vpc`}}",
+      "subnet_id": "{{user `subnet`}}"
+    }
+  ],
+  "provisioners": [
+    {
+      "type": "ansible",
+      "playbook_file": "ansible/fluentd-playbook.yml",
+      "user": "ubuntu"
+    }
+  ]
+}
