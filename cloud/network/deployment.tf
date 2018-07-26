@@ -20,7 +20,7 @@ resource "aws_route_table_association" "asg_a" {
 resource "aws_subnet" "asg_b" {
   vpc_id = "${aws_vpc.main.id}"
   cidr_block = "${local.asg_b}"
-  availability_zone = "${local.region}a"
+  availability_zone = "${local.region}b"
 
   tags {
     Name = "asg_b"
@@ -39,7 +39,7 @@ resource "aws_route_table_association" "asg_b" {
 resource "aws_subnet" "asg_c" {
   vpc_id = "${aws_vpc.main.id}"
   cidr_block = "${local.asg_c}"
-  availability_zone = "${local.region}a"
+  availability_zone = "${local.region}c"
 
   tags {
     Name = "asg_c"
@@ -114,16 +114,30 @@ resource "aws_route_table_association" "alb_c" {
   route_table_id = "${aws_route_table.internet.id}"
 }
 
-resource "aws_security_group" "asg_sg" {
+resource "aws_security_group" "asg" {
+  vpc_id = "${aws_vpc.main.id}"
+  name = "asg"
   ingress {
     from_port = 8000
     to_port = 8000
     protocol = "tcp"
     cidr_blocks = ["${aws_subnet.alb_a.cidr_block}","${aws_subnet.alb_b.cidr_block}","${aws_subnet.alb_c.cidr_block}"]
   }
+  egress {
+    from_port = 0
+    to_port = 0
+    protocol = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+output "asg_sg_id" {
+  value = "${aws_security_group.asg.id}"
 }
 
 resource "aws_security_group" "alb" {
+  vpc_id = "${aws_vpc.main.id}"
+  name = "alb"
   egress {
     from_port = 8000
     to_port = 8000

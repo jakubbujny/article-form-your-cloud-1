@@ -17,15 +17,68 @@ data "aws_ami" "goapp" {
     "self"]
 }
 
+resource "aws_iam_role" "iam_role" {
+  name = "iam_role"
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "ec2.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_instance_profile" "iam_instance_profile" {
+  name = "web_instance_profile"
+  role = "${aws_iam_role.iam_role.name}"
+}
+
+resource "aws_iam_role_policy" "iam_role_policy" {
+  name = "web_iam_role_policy"
+  role = "${aws_iam_role.iam_role.id}"
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": ["s3:ListBucket"],
+      "Resource": ["arn:aws:s3:::${aws_s3_bucket.photos.bucket}"]
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "s3:PutObject",
+        "s3:GetObject"
+      ],
+      "Resource": ["arn:aws:s3:::${aws_s3_bucket.photos.bucket}/*"]
+    }
+  ]
+}
+EOF
+}
+
 
 resource "aws_launch_configuration" "goapp" {
+
   lifecycle {
     create_before_destroy = true
   }
-
+  key_name = "me"
   name_prefix = "goapp-"
+  iam_instance_profile = "${aws_iam_instance_profile.iam_instance_profile.id}"
   image_id = "${data.aws_ami.goapp.id}"
   instance_type = "t2.micro"
+  associate_public_ip_address = true
+  security_groups = ["${data.terraform_remote_state.network_state.asg_sg_id}"]
 
   root_block_device = {
     volume_type = "gp2"
@@ -35,15 +88,21 @@ resource "aws_launch_configuration" "goapp" {
   user_data = <<EOF1
 #!/bin/bash
 cd /opt/
-./goapp & disown
+./goapp ${aws_s3_bucket.photos.bucket}
 EOF1
 
 }
 
+resource "aws_placement_group" "placement" {
+  name = "goapp"
+  strategy = "spread"
+}
 resource "aws_autoscaling_group" "goapp" {
+
   name = "goapp"
   max_size = 3
   min_size = 3
+  placement_group = "${aws_placement_group.placement.name}"
   desired_capacity = 3
   launch_configuration = "${aws_launch_configuration.goapp.name}"
   vpc_zone_identifier = [
@@ -55,8 +114,6 @@ resource "aws_autoscaling_group" "goapp" {
     create_before_destroy = true
   }
 
-  load_balancers = [
-    "${aws_alb.goapp_alb.name}"]
   tag {
     key = "Name"
     value = "goapp"
@@ -82,7 +139,7 @@ resource "aws_autoscaling_attachment" "attachement" {
 }
 
 resource "aws_alb_target_group" "alb_target_group" {
-  name     = "goapp_alb"
+  name     = "goapp-alb"
   port     = "8000"
   protocol = "HTTP"
   vpc_id   = "${data.terraform_remote_state.network_state.vpc_id}"
@@ -103,7 +160,8 @@ resource "aws_alb_target_group" "alb_target_group" {
 resource "aws_alb_listener" "alb_listener" {
   load_balancer_arn = "${aws_alb.goapp_alb.arn}"
   port              = "80"
-  protocol          = "tcp"
+  protocol          = "HTTP"
+
 
   default_action {
     target_group_arn = "${aws_alb_target_group.alb_target_group.arn}"

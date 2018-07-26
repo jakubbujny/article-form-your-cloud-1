@@ -8,10 +8,6 @@ terraform apply -auto-approve
 
 cd ..
 
-cd main
-terraform init -backend-config="bucket=${TF_VAR_state_bucket_name}" -backend-config="region=${region}"
-cd ..
-
 cd network
 terraform init -backend-config="bucket=${TF_VAR_state_bucket_name}" -backend-config="region=${region}"
 cd ..
