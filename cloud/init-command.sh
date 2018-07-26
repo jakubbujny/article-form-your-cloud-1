@@ -15,3 +15,7 @@ cd ..
 cd network
 terraform init -backend-config="bucket=${TF_VAR_state_bucket_name}" -backend-config="region=${region}"
 cd ..
+
+cd deployment
+terraform init -backend-config="bucket=${TF_VAR_state_bucket_name}" -backend-config="region=${region}"
+cd ..

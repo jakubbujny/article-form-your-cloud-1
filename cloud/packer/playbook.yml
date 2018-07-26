@@ -1,0 +1,12 @@
+---
+- hosts: all
+  become: yes
+  gather_facts: yes
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
+  tasks:
+    - name: copy go app
+      copy:
+        src: ../../goapp/goapp
+        dest: /opt/goapp
+        mode: 0777

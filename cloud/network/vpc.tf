@@ -3,6 +3,10 @@ resource "aws_vpc" "main" {
 
 }
 
+output "vpc_id" {
+  value = "${aws_vpc.main.id}"
+}
+
 resource "aws_internet_gateway" "internet" {
   vpc_id = "${aws_vpc.main.id}"
 
