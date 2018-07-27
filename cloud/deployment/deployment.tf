@@ -59,7 +59,7 @@ resource "aws_iam_role_policy" "iam_role_policy" {
         "s3:PutObject",
         "s3:GetObject"
       ],
-      "Resource": ["arn:aws:s3:::${aws_s3_bucket.photos.bucket}/*"]
+      "Resource": ["arn:aws:s3:::${aws_s3_bucket.photos.bucket}/*", "arn:aws:s3:::${aws_s3_bucket.certbot.bucket}/*"]
     }
   ]
 }
@@ -88,7 +88,7 @@ resource "aws_launch_configuration" "goapp" {
   user_data = <<EOF1
 #!/bin/bash
 cd /opt/
-./goapp ${aws_s3_bucket.photos.bucket}
+./goapp ${aws_s3_bucket.photos.bucket} ${aws_s3_bucket.certbot.bucket}
 EOF1
 
 }
@@ -131,6 +131,10 @@ resource "aws_alb" "goapp_alb" {
     "${data.terraform_remote_state.network_state.alb_b_subnet_id}",
     "${data.terraform_remote_state.network_state.alb_c_subnet_id}"]
 
+}
+
+output "alb_endpoint" {
+  value = "${aws_alb.goapp_alb.dns_name}"
 }
 
 resource "aws_autoscaling_attachment" "attachement" {

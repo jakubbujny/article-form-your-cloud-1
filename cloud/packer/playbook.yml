@@ -5,6 +5,9 @@
   vars:
     ansible_python_interpreter: /usr/bin/python3
   tasks:
+    - name: build app
+      become_user: jbujny
+      local_action: shell go build chdir=../../goapp
     - name: copy go app
       copy:
         src: ../../goapp/goapp

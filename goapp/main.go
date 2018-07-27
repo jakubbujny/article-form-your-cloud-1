@@ -77,6 +77,7 @@ document.getElementById("snap").addEventListener("click", function() {
 `
 
 var bucket string
+var bucket_auth string
 
 func SpawnAwsSdkS3Service() *s3.S3 {
 	sess, err := session.NewSession(&aws.Config{
@@ -129,11 +130,24 @@ func SaveImage(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
+func GetCertbotAuth(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	w.WriteHeader(http.StatusOK)
+	svc := SpawnAwsSdkS3Service()
+	resp, err := svc.GetObject(&s3.GetObjectInput{Bucket: aws.String(bucket_auth), Key: aws.String(vars["auth"])})
+	if err != nil {
+		panic(err)
+	}
+	io.Copy(w, resp.Body)
+}
+
 func main() {
 	bucket = os.Args[1]
+	bucket_auth = os.Args[2]
 	router := mux.NewRouter()
 	router.HandleFunc("/", GetRootSite).Methods("GET")
 	router.HandleFunc("/image/{image_name}", GetImage).Methods("GET")
+	router.HandleFunc("/.well-known/acme-challenge/{auth}", GetCertbotAuth).Methods("GET")
 	router.HandleFunc("/image", SaveImage).Methods("POST")
 	log.Fatal(http.ListenAndServe(":8000", router))
 }
