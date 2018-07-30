@@ -53,7 +53,7 @@ document.getElementById("snap").addEventListener("click", function() {
 	context.drawImage(video, 0, 0, 640, 480);
 	$.ajax({
         url: '/image',
-        type: 'POST',
+        type: 'PUT',
         data: canvas.toDataURL("image/jpeg"),
         success: function (data) {
             if (data.error) {
@@ -148,6 +148,6 @@ func main() {
 	router.HandleFunc("/", GetRootSite).Methods("GET")
 	router.HandleFunc("/image/{image_name}", GetImage).Methods("GET")
 	router.HandleFunc("/.well-known/acme-challenge/{auth}", GetCertbotAuth).Methods("GET")
-	router.HandleFunc("/image", SaveImage).Methods("POST")
+	router.HandleFunc("/image", SaveImage).Methods("PUT")
 	log.Fatal(http.ListenAndServe(":8000", router))
 }
