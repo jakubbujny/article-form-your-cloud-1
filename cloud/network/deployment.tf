@@ -124,9 +124,9 @@ resource "aws_security_group" "asg" {
     cidr_blocks = ["${aws_subnet.alb_a.cidr_block}","${aws_subnet.alb_b.cidr_block}","${aws_subnet.alb_c.cidr_block}"]
   }
   egress {
-    from_port = 0
-    to_port = 0
-    protocol = "-1"
+    from_port = 443
+    to_port = 443
+    protocol = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
 }
