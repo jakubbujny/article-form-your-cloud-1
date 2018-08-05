@@ -51,7 +51,7 @@ resource "aws_iam_role_policy" "iam_role_policy" {
     {
       "Effect": "Allow",
       "Action": ["s3:ListBucket"],
-      "Resource": ["arn:aws:s3:::${aws_s3_bucket.photos.bucket}"]
+      "Resource": [":${aws_s3_bucket.photos.arn}"]
     },
     {
       "Effect": "Allow",
@@ -59,7 +59,7 @@ resource "aws_iam_role_policy" "iam_role_policy" {
         "s3:PutObject",
         "s3:GetObject"
       ],
-      "Resource": ["arn:aws:s3:::${aws_s3_bucket.photos.bucket}/*", "arn:aws:s3:::${aws_s3_bucket.certbot.bucket}/*"]
+      "Resource": ["${aws_s3_bucket.photos.arn}/*", "${aws_s3_bucket.certbot.arn}/*"]
     }
   ]
 }
