@@ -109,9 +109,6 @@ resource "aws_autoscaling_group" "goapp" {
     "${data.terraform_remote_state.network_state.asg_b_subnet_id}",
     "${data.terraform_remote_state.network_state.asg_c_subnet_id}"]
 
-  lifecycle {
-    create_before_destroy = true
-  }
 
   tag {
     key = "Name"
