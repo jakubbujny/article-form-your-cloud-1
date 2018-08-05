@@ -72,7 +72,6 @@ resource "aws_launch_configuration" "goapp" {
   lifecycle {
     create_before_destroy = true
   }
-  key_name = "me"
   name_prefix = "goapp-"
   iam_instance_profile = "${aws_iam_instance_profile.iam_instance_profile.id}"
   image_id = "${data.aws_ami.goapp.id}"
